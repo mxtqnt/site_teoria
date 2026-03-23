@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento: Leitura de Notas (Simplificado)</title>
+    <style>
+        /* Reutilização da folha de estilos do módulo anterior */
+        :root {
+            --bg-color: #f4f4f9; --text-color: #333333; --accent-color: #ff00ff;
+            --card-bg: #ffffff; --border-color: #dddddd; --hover-color: #fce6fc;
+            --correct: #28a745; --incorrect: #dc3545;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
+            --border-color: #333333; --hover-color: #3a1c3a;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); margin: 0; padding: 20px; display: flex;
+            flex-direction: column; align-items: center; transition: 0.3s;
+        }
+        .header-controls {
+            display: flex; justify-content: space-between; width: 100%; max-width: 800px; margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color);
+            background-color: var(--card-bg); color: var(--text-color); font-size: 1rem; cursor: pointer;
+        }
+        select:focus { outline: none; border-color: var(--accent-color); }
+        .back-btn { text-decoration: none; color: var(--text-color); border: 2px solid var(--border-color); padding: 10px 15px; border-radius: 8px; background: var(--card-bg); }
+        .quiz-container {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 30px; text-align: center; max-width: 600px; width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .image-container img {
+            max-width: 100%; height: 150px; object-fit: contain; margin-bottom: 20px;
+            background-color: white; padding: 10px; border-radius: 8px; border: 1px solid #ccc;
+        }
+        .options-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .option-btn {
+            background-color: var(--card-bg); border: 2px solid var(--border-color);
+            padding: 15px; border-radius: 8px; transition: 0.2s; font-weight: 500; font-size: 1.1rem;
+        }
+        .option-btn:hover:not(:disabled) { border-color: var(--accent-color); background-color: var(--hover-color); }
+        .option-btn.correct { background-color: var(--correct); color: white; border-color: var(--correct); }
+        .option-btn.wrong { background-color: var(--incorrect); color: white; border-color: var(--incorrect); }
+        .next-btn {
+            margin-top: 20px; background-color: var(--accent-color); color: white;
+            border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; display: none;
+        }
+        .next-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div class="header-controls">
+        <a href="main.html" class="back-btn">← Voltar</a>
+        <select id="filtroModulo" onchange="carregarQuestao()">
+            <option value="ambas">Ambas as Claves</option>
+            <option value="sol">Apenas Clave de Sol</option>
+            <option value="fa">Apenas Clave de Fá</option>
+        </select>
+        <button id="themeToggle" style="border-color: var(--accent-color); color: var(--accent-color);">Alternar Tema</button>
+    </div>
+
+    <div class="quiz-container">
+        <h2>Identifique a Nota Musical</h2>
+        <div class="image-container">
+            <img id="imagemQuestao" src="" alt="Nota Musical">
+        </div>
+        <div class="options-grid" id="containerOpcoes"></div>
+        <button id="btnProxima" class="next-btn" onclick="carregarQuestao()">Próxima Questão</button>
+    </div>
+
+    <script>
+        // Manutenção do Tema
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+
+        // Definição clara das 7 notas musicais (as únicas opções possíveis)
+        const nomesNotas = ['Dó', 'Ré', 'Mi', 'Fá', 'Sol', 'Lá', 'Si'];
+        
+        // Mapeamento para geração dinâmica da base de dados baseada no padrão de nomenclatura dos arquivos
+        const notasArquivoMap = {
+            'Do': 'Dó', 'Re': 'Ré', 'Mi': 'Mi', 'Fa': 'Fá', 'Sol': 'Sol', 'La': 'Lá', 'Si': 'Si'
+        };
+        const oitavas = [1, 2, 3];
+        const baseDados = [];
+
+        // Geração da base de dados
+        Object.keys(notasArquivoMap).forEach(nota => {
+            oitavas.forEach(oitava => {
+                // Clave de Fá
+                baseDados.push({
+                    path: `Notas - Clave de Fa/ClaveDeFa-${nota}${oitava}.png`,
+                    tipo: 'fa',
+                    notaSimple: notasArquivoMap[nota] // Armazena apenas o nome puro da nota
+                });
+                // Clave de Sol
+                baseDados.push({
+                    path: `Notas - Clave de Sol/ClaveDeSol-${nota}${oitava}.png`,
+                    tipo: 'sol',
+                    notaSimple: notasArquivoMap[nota]
+                });
+            });
+        });
+
+        let questaoAtual = null;
+
+        // Função auxiliar para embaralhar um array
+        function embaralhar(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        function carregarQuestao() {
+            document.getElementById('btnProxima').style.display = 'none';
+            const filtro = document.getElementById('filtroModulo').value;
+            
+            // Filtra a base de dados
+            let conjuntoFiltro = baseDados;
+            if (filtro !== 'ambas') {
+                conjuntoFiltro = baseDados.filter(item => item.tipo === filtro);
+            }
+
+            // Seleciona a questão atual aleatoriamente
+            questaoAtual = conjuntoFiltro[Math.floor(Math.random() * conjuntoFiltro.length)];
+            
+            // Define a imagem da partitura
+            document.getElementById('imagemQuestao').src = questaoAtual.path;
+
+            // --- Geração das 6 Opções ---
+
+            // 1. Obtém o nome puro da nota correta
+            const notaCorreta = questaoAtual.notaSimple;
+
+            // 2. Cria a lista de opções incorretas (todas as outras 6 notas)
+            const outrasNotas = nomesNotas.filter(n => n !== notaCorreta);
+            
+            // 3. Embaralha as 6 outras notas e pega apenas 5
+            const incorretasSelecionadas = embaralhar(outrasNotas).slice(0, 5);
+            
+            // 4. Cria o conjunto final de 6 opções (1 correta + 5 incorretas) e embaralha novamente
+            const todasOpcoesFinal = embaralhar([notaCorreta, ...incorretasSelecionadas]);
+
+            // Renderiza os botões
+            const containerOpcoes = document.getElementById('containerOpcoes');
+            containerOpcoes.innerHTML = '';
+
+            todasOpcoesFinal.forEach(nomeNotaOpcao => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = nomeNotaOpcao;
+                // Passa o nome da nota clicada diretamente para a verificação
+                btn.onclick = () => verificarResposta(btn, nomeNotaOpcao);
+                containerOpcoes.appendChild(btn);
+            });
+        }
+
+        function verificarResposta(botaoClicado, nomeNotaClicada) {
+            // Verifica se a nota clicada é igual à nota da imagem
+            const isCorrect = (nomeNotaClicada === questaoAtual.notaSimple);
+            const botoes = document.querySelectorAll('.option-btn');
+            
+            botoes.forEach(btn => {
+                btn.disabled = true; // Desabilita todos após o clique
+                // Destaca a resposta correta em verde
+                if (btn.innerText === questaoAtual.notaSimple) {
+                    btn.classList.add('correct');
+                }
+            });
+
+            // Se o usuário clicou na errada, destaca-a em vermelho
+            if (!isCorrect) {
+                botaoClicado.classList.add('wrong');
+            }
+
+            // Mostra o botão para ir à próxima questão
+            document.getElementById('btnProxima').style.display = 'inline-block';
+        }
+
+        // Inicializa a primeira questão
+        window.onload = carregarQuestao;
+    </script>
+</body>
+</html>
