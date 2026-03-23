@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento: Percepção Auditiva de Escalas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-color: #f4f4f9; --text-color: #333333; --accent-color: #ff00ff;
+            --card-bg: #ffffff; --border-color: #dddddd; --hover-color: #fce6fc;
+            --correct: #28a745; --incorrect: #dc3545;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
+            --border-color: #333333; --hover-color: #3a1c3a;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); margin: 0; padding: 20px; display: flex;
+            flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s;
+        }
+        
+        .header-controls {
+            display: flex; justify-content: space-between; align-items: center; 
+            width: 100%; max-width: 800px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+        }
+        
+        .filter-score-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .header-controls select, 
+        .header-controls .back-btn, 
+        .header-controls .score-board, 
+        .header-controls #themeToggle {
+            height: 45px; 
+            padding: 0 15px;
+            border-radius: 8px; 
+            border: 2px solid var(--border-color);
+            background-color: var(--card-bg); 
+            color: var(--text-color); 
+            font-size: 1rem; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            margin: 0;
+            font-family: inherit;
+        }
+
+        .header-controls select { cursor: pointer; }
+        .header-controls select:focus { outline: none; border-color: var(--accent-color); }
+        .header-controls .score-board { cursor: default; } 
+        .header-controls .score-board span { color: var(--accent-color); margin: 0 4px; font-weight: bold; }
+
+        .header-controls #themeToggle {
+            font-size: 1.5rem; 
+            border-color: var(--accent-color); 
+            color: var(--accent-color); 
+            cursor: pointer;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 30px; text-align: center; max-width: 600px; width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px;
+        }
+
+        /* Estilos do Toggle de Velocidade */
+        .speed-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-color);
+            transition: .3s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--card-bg);
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .audio-btn {
+            height: 45px;
+            padding: 0 20px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .audio-btn:hover:not(:disabled) {
+            border-color: var(--accent-color);
+            background-color: var(--hover-color);
+        }
+
+        .audio-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: var(--border-color) !important;
+            background-color: var(--card-bg) !important;
+        }
+
+        .options-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .option-btn {
+            background-color: var(--card-bg); border: 2px solid var(--border-color); color: var(--text-color);
+            padding: 15px; border-radius: 8px; transition: 0.2s; font-weight: 500; font-size: 1.1rem;
+            cursor: pointer; font-family: inherit;
+        }
+        .option-btn:hover:not(:disabled) { border-color: var(--accent-color); background-color: var(--hover-color); }
+        .option-btn.correct { background-color: var(--correct); color: white; border-color: var(--correct); }
+        .option-btn.wrong { background-color: var(--incorrect); color: white; border-color: var(--incorrect); }
+        .next-btn {
+            margin-top: 20px; background-color: var(--accent-color); color: white;
+            border: none; padding: 12px 24px; font-weight: bold; border-radius: 8px; display: none; width: 100%;
+            cursor: pointer; font-family: inherit; font-size: 1rem;
+        }
+        .next-btn:hover { opacity: 0.9; }
+
+        footer {
+            margin-top: auto; padding: 30px 20px 10px; text-align: center;
+            font-size: 0.9rem; color: var(--text-color); opacity: 0.8; width: 100%;
+        }
+        footer a { color: var(--accent-color); text-decoration: none; font-weight: bold; transition: opacity 0.3s; }
+        footer a:hover { opacity: 0.7; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="header-controls">
+        <a href="index.html" class="back-btn">← Voltar</a>
+        
+        <div class="filter-score-group">
+            <select id="filtroModulo">
+                <option value="ambas">Ambas as Escalas</option>
+                <option value="maior">Apenas Maiores</option>
+                <option value="menor">Apenas Menores</option>
+            </select>
+            
+            <div class="score-board">
+                Pontuação: <span id="pontosAcertos">0</span> / <span id="pontosTotal">0</span>
+            </div>
+        </div>
+
+        <button id="themeToggle" title="Alternar Tema">☾</button>
+    </div>
+
+    <div class="quiz-container">
+        <h2>Identifique a Escala Tocada</h2>
+        
+        <div class="speed-toggle-container">
+            <span id="labelLento">Lento</span>
+            <label class="switch" title="Alternar velocidade da escala">
+                <input type="checkbox" id="toggleVelocidade">
+                <span class="slider"></span>
+            </label>
+            <span id="labelRapido">Rápido</span>
+        </div>
+        
+        <div class="audio-controls">
+            <button id="btnPlayTonica" class="audio-btn" onclick="tocarTonicaAtual()" disabled>Carregando...</button>
+            <button id="btnPlayEscala" class="audio-btn" onclick="tocarEscalaAtual()" disabled>Carregando Piano...</button>
+        </div>
+
+        <div class="options-grid" id="containerOpcoes"></div>
+        <button id="btnProxima" class="next-btn" onclick="carregarQuestao()">Próxima Questão</button>
+    </div>
+
+    <footer>
+        Desenvolvido por Ana Misque | Siga no Insta: <a href="https://instagram.com/anamisque" target="_blank" rel="noopener noreferrer">@anamisque</a>
+    </footer>
+
+    <script>
+        // Tema
+        const themeBtn = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.innerText = '☀';
+        }
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.innerText = newTheme === 'dark' ? '☀' : '☾';
+        });
+
+        // Filtro
+        const filtroSelect = document.getElementById('filtroModulo');
+        const filtroSalvo = localStorage.getItem('filtroEscalas') || 'ambas'; 
+        filtroSelect.value = filtroSalvo; 
+        filtroSelect.addEventListener('change', function() {
+            localStorage.setItem('filtroEscalas', this.value); 
+            location.reload(); 
+        });
+
+        // Velocidade (Toggle) com LocalStorage
+        const toggleVelocidade = document.getElementById('toggleVelocidade');
+        // Recupera o valor salvo (se existir). Como o localStorage salva strings, verificamos se é igual a 'true'
+        const velocidadeSalva = localStorage.getItem('velocidadeEscala') === 'true'; 
+        toggleVelocidade.checked = velocidadeSalva;
+
+        toggleVelocidade.addEventListener('change', function() {
+            localStorage.setItem('velocidadeEscala', this.checked);
+        });
+
+        // ---------------------------------------------------
+        // NOVO SINTETIZADOR DE PIANO REAL (Tone.js Sampler)
+        // ---------------------------------------------------
+        let pianoPronto = false;
+
+        // Importa gravações reais de um Grand Piano da nuvem
+        const piano = new Tone.Sampler({
+            urls: {
+                "C4": "C4.mp3",
+                "D#4": "Ds4.mp3",
+                "F#4": "Fs4.mp3",
+                "A4": "A4.mp3",
+                "C5": "C5.mp3",
+                "D#5": "Ds5.mp3",
+                "F#5": "Fs5.mp3",
+                "A5": "A5.mp3",
+            },
+            release: 1,
+            baseUrl: "https://tonejs.github.io/audio/salamander/",
+            onload: () => {
+                pianoPronto = true;
+                // Libera os botões quando o piano termina de baixar
+                document.getElementById('btnPlayTonica').disabled = false;
+                document.getElementById('btnPlayEscala').disabled = false;
+                document.getElementById('btnPlayTonica').innerText = "Ouvir Tônica";
+                document.getElementById('btnPlayEscala').innerText = "Reproduzir Escala";
+            }
+        }).toDestination();
+
+        // Volume do piano um pouco mais alto e com um leve reverb (decay) natural
+        piano.volume.value = 5;
+
+        // Tabela baseada em números MIDI (Dó central = 60)
+        const notasBaseMIDI = [
+            { nome: 'Dó', midi: 60 }, { nome: 'Dó# / Réb', midi: 61 },
+            { nome: 'Ré', midi: 62 }, { nome: 'Mib / Ré#', midi: 63 },
+            { nome: 'Mi', midi: 64 }, { nome: 'Fá', midi: 65 },
+            { nome: 'Fá# / Solb', midi: 66 }, { nome: 'Sol', midi: 67 },
+            { nome: 'Sol# / Láb', midi: 68 }, { nome: 'Lá', midi: 69 },
+            { nome: 'Sib / Lá#', midi: 70 }, { nome: 'Si', midi: 71 }
+        ];
+
+        const intervalosMaior = [0, 2, 4, 5, 7, 9, 11, 12];
+        const intervalosMenorNatural = [0, 2, 3, 5, 7, 8, 10, 12];
+
+        // Traduz as somas dos intervalos para os nomes das notas (Ex: 60 -> "C4")
+        function calcularNotasTone(midiBase, intervalos) {
+            return intervalos.map(intervalo => Tone.Frequency(midiBase + intervalo, "midi").toNote());
+        }
+
+        const baseDados = [];
+        notasBaseMIDI.forEach((nota) => {
+            baseDados.push({
+                label: `${nota.nome} Maior`, tipo: 'maior',
+                notas: calcularNotasTone(nota.midi, intervalosMaior)
+            });
+            baseDados.push({
+                label: `${nota.nome} Menor`, tipo: 'menor',
+                notas: calcularNotasTone(nota.midi, intervalosMenorNatural)
+            });
+        });
+
+        // Travar os botões durante a reprodução
+        function alternarBotoesAudio(estado) {
+            if (!pianoPronto) return; 
+            document.getElementById('btnPlayEscala').disabled = estado;
+            document.getElementById('btnPlayTonica').disabled = estado;
+        }
+
+        async function tocarEscala(notas) {
+            if (!pianoPronto) return;
+            await Tone.start(); // O navegador exige isso antes de tocar o primeiro som
+            
+            alternarBotoesAudio(true);
+            
+            // Verifica a velocidade do toggle
+            const isRapido = document.getElementById('toggleVelocidade').checked;
+            const duracaoNota = isRapido ? 0.4 : 0.8; // 0.4s para rápido, 0.8s para lento
+            const tempoAtual = Tone.now();
+
+            notas.forEach((nota, i) => {
+                // Toca a nota na velocidade e momento certos
+                piano.triggerAttackRelease(nota, "8n", tempoAtual + i * duracaoNota);
+            });
+
+            // Libera o botão após todas as notas tocarem
+            setTimeout(() => { alternarBotoesAudio(false); }, notas.length * duracaoNota * 1000);
+        }
+
+        async function tocarTonicaAtual() {
+            if(!questaoAtual || !pianoPronto) return;
+            await Tone.start();
+            
+            alternarBotoesAudio(true);
+
+            const notaTonica = questaoAtual.notas[0]; 
+            const tempoAtual = Tone.now();
+            
+            // Deixa a nota soando por 1.5 segundos (um toque longo)
+            piano.triggerAttackRelease(notaTonica, 1.5, tempoAtual);
+
+            setTimeout(() => { alternarBotoesAudio(false); }, 1500);
+        }
+
+        // ---------------------------------------------------
+        // LÓGICA DO QUIZ
+        // ---------------------------------------------------
+        let questaoAtual = null;
+        let questaoAnterior = null;
+        let acertos = 0;
+        let total = 0;
+
+        function embaralhar(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function atualizarPlacarDOM() {
+            document.getElementById('pontosAcertos').innerText = acertos;
+            document.getElementById('pontosTotal').innerText = total;
+        }
+
+        function tocarEscalaAtual() {
+            if(questaoAtual) tocarEscala(questaoAtual.notas);
+        }
+
+        function carregarQuestao() {
+            document.getElementById('btnProxima').style.display = 'none';
+            const filtro = filtroSelect.value;
+            
+            let conjuntoFiltro = baseDados;
+            if (filtro !== 'ambas') conjuntoFiltro = baseDados.filter(item => item.tipo === filtro);
+
+            let novaQuestao;
+            do {
+                novaQuestao = conjuntoFiltro[Math.floor(Math.random() * conjuntoFiltro.length)];
+            } while (conjuntoFiltro.length > 1 && novaQuestao === questaoAnterior);
+
+            questaoAtual = novaQuestao;
+            questaoAnterior = questaoAtual;
+            
+            let outrasOpcoes = baseDados.filter(item => item.label !== questaoAtual.label);
+            const incorretasSelecionadas = embaralhar(outrasOpcoes).slice(0, 5);
+            const todasOpcoesFinal = embaralhar([questaoAtual, ...incorretasSelecionadas]);
+
+            const containerOpcoes = document.getElementById('containerOpcoes');
+            containerOpcoes.innerHTML = '';
+
+            todasOpcoesFinal.forEach(opcao => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opcao.label;
+                btn.onclick = () => verificarResposta(btn, opcao.label === questaoAtual.label);
+                containerOpcoes.appendChild(btn);
+            });
+        }
+
+        function verificarResposta(botaoClicado, isCorrect) {
+            const botoes = document.querySelectorAll('.option-btn');
+            
+            botoes.forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerText === questaoAtual.label) btn.classList.add('correct');
+            });
+
+            total++;
+            if (isCorrect) {
+                acertos++;
+            } else {
+                botaoClicado.classList.add('wrong');
+            }
+
+            atualizarPlacarDOM();
+            document.getElementById('btnProxima').style.display = 'inline-block';
+        }
+
+        window.onload = carregarQuestao;
+    </script>
+</body>
+</html>

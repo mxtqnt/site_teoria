@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Estudo Teórico-Musical</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-color: #f4f4f9;
             --text-color: #333333;
@@ -31,13 +35,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            min-height: 100vh; /* Garante que o corpo ocupe toda a altura da tela */
             transition: background-color 0.3s, color 0.3s;
         }
 
         header {
             text-align: center;
             margin-bottom: 40px;
+            margin-top: 60px; /* Dá um respiro para não encostar no botão de tema no mobile */
         }
 
         h1 { margin-bottom: 5px; }
@@ -53,6 +58,8 @@
             gap: 20px;
             flex-wrap: wrap;
             justify-content: center;
+            max-width: 800px;
+            padding: 0 20px;
         }
 
         .menu-btn {
@@ -68,6 +75,8 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             display: inline-block;
+            text-align: center;
+            flex: 1 1 200px; /* Faz os botões ficarem responsivos */
         }
 
         .menu-btn:hover {
@@ -76,29 +85,58 @@
             transform: translateY(-2px);
         }
 
+        /* Botão de Tema Padronizado */
         .theme-toggle {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: none;
+            height: 45px;
+            width: 45px; /* Quadrado perfeito para o ícone */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--card-bg);
             border: 2px solid var(--accent-color);
             color: var(--accent-color);
-            padding: 8px 16px;
-            border-radius: 20px;
+            font-size: 1.5rem; /* Tamanho do ícone */
+            border-radius: 8px; /* Mesmo raio das outras páginas */
             cursor: pointer;
-            font-weight: bold;
             transition: 0.3s;
+            padding: 0;
         }
 
         .theme-toggle:hover {
-            background-color: var(--accent-color);
-            color: #fff;
+            background-color: var(--hover-color);
+            transform: scale(1.05);
+        }
+
+        /* Estilos do Rodapé */
+        footer {
+            margin-top: auto; /* Empurra o rodapé para o final da página */
+            padding: 40px 20px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+            width: 100%;
+        }
+
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+
+        footer a:hover {
+            opacity: 0.7;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" id="themeToggle">Alternar Tema</button>
+    <button class="theme-toggle" id="themeToggle" title="Alternar Tema">☾</button>
 
     <header>
         <h1>Módulos de Treinamento Musical</h1>
@@ -108,25 +146,34 @@
     <div class="menu-container">
         <a href="notas.html" class="menu-btn">Leitura de Notas</a>
         <a href="armaduras.html" class="menu-btn">Armaduras de Clave</a>
+        <a href="percepcao.html" class="menu-btn">Percepção Auditiva</a>
     </div>
 
+    <footer>
+        Desenvolvido por Ana Misque | Siga no Instagram: <a href="https://instagram.com/anamisque" target="_blank" rel="noopener noreferrer">@anamisque</a>
+    </footer>
+
     <script>
+        // Configuração do Botão de Tema com a mesma lógica dos outros módulos
         const toggleBtn = document.getElementById('themeToggle');
         const currentTheme = localStorage.getItem('theme') || 'light';
         
+        // Aplica o tema salvo logo ao carregar
         if (currentTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
+            toggleBtn.innerText = '☀';
+        } else {
+            toggleBtn.innerText = '☾';
         }
 
+        // Alterna entre os temas
         toggleBtn.addEventListener('click', () => {
-            let theme = document.documentElement.getAttribute('data-theme');
-            if (theme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
-            }
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            toggleBtn.innerText = newTheme === 'dark' ? '☀' : '☾';
         });
     </script>
 </body>
