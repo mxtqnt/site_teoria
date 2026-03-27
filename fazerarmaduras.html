@@ -3,198 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Treinamento: Armaduras de Clave</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.2/abcjs-basic-min.js"></script>
+    <title>Treinamento: Acidentes das Escalas</title>
     <style>
         * {
             box-sizing: border-box;
         }
 
         :root {
-            --bg-color: #f4f4f9;
-            --text-color: #333333;
-            --accent-color: #ff00ff;
-            --card-bg: #ffffff;
-            --border-color: #eaeaea;
-            --hover-color: #fdf0fd;
-            --control-bg: #f8f9fa;
-            --correct: #28a745;
-            --incorrect: #dc3545;
+            --bg-color: #f4f4f9; --text-color: #333333; --accent-color: #ff00ff;
+            --card-bg: #ffffff; --border-color: #eaeaea; --hover-color: #fdf0fd;
+            --control-bg: #f8f9fa; --correct: #28a745; --incorrect: #dc3545;
         }
-        
         [data-theme="dark"] {
-            --bg-color: #121212;
-            --text-color: #e0e0e0;
-            --card-bg: #1e1e1e;
-            --border-color: #2c2c2c;
-            --hover-color: #3a1c3a;
-            --control-bg: #2a2a2a;
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
+            --border-color: #2c2c2c; --hover-color: #3a1c3a; --control-bg: #2a2a2a;
         }
-
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color); 
-            margin: 0; 
-            padding: 20px; 
-            display: flex;
-            flex-direction: column; 
-            align-items: center; 
-            min-height: 100vh; 
-            transition: background-color 0.3s, color 0.3s;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); margin: 0; padding: 20px; display: flex;
+            flex-direction: column; align-items: center; min-height: 100vh; transition: 0.3s;
         }
         
         .header-controls {
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            width: 100%; 
-            max-width: 800px; 
-            margin-bottom: 20px;
-            position: relative;
-            flex-wrap: wrap;
-            gap: 15px;
+            display: flex; justify-content: space-between; align-items: center; 
+            width: 100%; max-width: 800px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
         }
 
         .filter-score-group {
             display: flex;
             align-items: center;
             gap: 15px;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        @media (max-width: 650px) {
-            .header-controls { flex-wrap: wrap; }
-            .filter-score-group {
-                position: static; transform: none; order: 3;
-                width: 100%; justify-content: center; margin-top: 15px;
-            }
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .header-controls select, 
         .header-controls .back-btn, 
-        .header-controls .score-board {
-            height: 40px; 
-            padding: 0 20px;
-            border-radius: 20px; 
+        .header-controls .score-board, 
+        .header-controls #themeToggle {
+            height: 40px;
+            padding: 0 15px;
+            border-radius: 20px;
             border: 1px solid var(--border-color);
-            background-color: var(--card-bg);
+            background-color: var(--card-bg); 
             color: var(--text-color); 
-            font-size: 0.95rem; 
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
             margin: 0;
             font-family: inherit;
-            transition: background-color 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
-        .header-controls select { cursor: pointer; outline: none; }
-        .header-controls select:focus { border-color: var(--accent-color); }
+        .header-controls select { cursor: pointer; }
+        .header-controls select:focus { outline: none; border-color: var(--accent-color); }
         
         .header-controls .score-board { cursor: default; }
         .header-controls .score-board span { color: var(--accent-color); margin: 0 4px; font-weight: 600; }
 
         .header-controls #themeToggle {
-            font-size: 1.2rem; 
-            background: transparent;
+            font-size: 1.2rem;
             border: none;
-            color: var(--text-color); 
+            color: var(--text-color);
+            background: transparent;
             cursor: pointer;
-            padding: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             box-shadow: none;
         }
         .header-controls #themeToggle:hover { color: var(--accent-color); }
 
         .quiz-container {
-            background-color: var(--card-bg); 
-            border: 1px solid var(--border-color);
-            border-radius: 16px; 
-            padding: 30px;
-            text-align: center; 
-            max-width: 650px; 
-            width: 100%;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; text-align: center; max-width: 600px; width: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-top: 10px;
         }
 
-        .quiz-container h2 {
-            margin-top: 0; margin-bottom: 25px; font-size: 1.25rem; font-weight: 600; text-align: center;
+        /* Novo estilo para o texto da escala */
+        .escala-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 30px 0;
         }
 
-        /* Contêiner da Partitura Centralizado */
-        .partitura-container {
-            background-color: #ffffff;
-            color: #000000 !important;
-            border-radius: 12px;
-            padding: 20px 10px;
-            margin-bottom: 30px;
-            min-height: 160px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        .partitura-container svg {
-            color: #000000 !important; fill: #000000 !important; max-width: 100%; height: auto;
-        }
-
+        /* Grade com 4 opções (2x2) */
         .options-grid {
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 12px;
-            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
-        @media (max-width: 480px) {
-            .options-grid { grid-template-columns: 1fr; }
+        @media (max-width: 560px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         button { cursor: pointer; font-family: inherit; }
-        
         .option-btn {
-            background-color: var(--control-bg);
-            border: 1px solid var(--border-color); 
-            color: var(--text-color);
-            padding: 15px; 
-            border-radius: 25px; 
-            transition: 0.2s; 
-            font-weight: 600; 
-            font-size: 1.05rem;
-            width: 100%;
+            background-color: var(--control-bg); border: 1px solid var(--border-color); color: var(--text-color);
+            padding: 12px; border-radius: 16px; transition: 0.2s;
             display: flex;
-            justify-content: center;
             align-items: center;
-            text-align: center;
+            justify-content: center;
+            min-height: 84px;
         }
-
-        .option-btn:hover:not(:disabled) { 
-            border-color: var(--accent-color); 
-            background-color: var(--hover-color); 
-        }
+        .option-btn:hover:not(:disabled) { border-color: var(--accent-color); background-color: var(--hover-color); }
         .option-btn.correct { background-color: var(--correct); color: white; border-color: var(--correct); }
         .option-btn.wrong { background-color: var(--incorrect); color: white; border-color: var(--incorrect); }
+
+        .option-btn img {
+            width: 100%;
+            max-width: 170px;
+            height: auto;
+            border-radius: 8px;
+            background: #fff;
+        }
         
+        /* Barra de progresso visual para o timer (opcional) */
         .timer-bar {
-            height: 4px; 
-            background-color: var(--accent-color); 
-            width: 100%; /* A barra sempre ocupa 100% do espaço... */
-            transform: scaleX(0); /* ...mas começa com escala 0 (invisível) */
-            transform-origin: center; /* Define que o ponto de expansão é o meio */
-            transition: transform 1.5s linear; /* A animação agora acontece no transform */
-            margin-top: 25px; 
-            border-radius: 2px;
+            height: 4px; background-color: var(--accent-color); width: 0%; 
+            transition: width 1.5s linear; margin-top: 20px; border-radius: 2px;
             display: none;
             opacity: 0.5;
         }
@@ -224,14 +154,14 @@
             </div>
         </div>
 
-        <button id="themeToggle" title="Alternar Tema">☀</button>
+        <button id="themeToggle" title="Alternar Tema">☾</button>
     </div>
 
     <div class="quiz-container">
-        <h2>Identifique a Tonalidade da Armadura</h2>
+        <h2>Quais são os acidentes desta escala?</h2>
         
-        <div class="partitura-container" id="partitura"></div>
-        
+        <div id="textoQuestao" class="escala-display"></div>
+
         <div class="options-grid" id="containerOpcoes"></div>
         <div id="timerBar" class="timer-bar"></div>
     </div>
@@ -247,8 +177,6 @@
         if (currentTheme === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
             themeBtn.innerText = '☀'; 
-        } else {
-            themeBtn.innerText = '☾';
         }
 
         themeBtn.addEventListener('click', () => {
@@ -259,23 +187,27 @@
             themeBtn.innerText = newTheme === 'dark' ? '☀' : '☾'; 
         });
 
-        // Base de dados adaptada para renderização dinâmica (parâmetro abcKey)
+        // Nova base de dados com as escalas e a ordem correta dos acidentes
         const baseDados = [
-            { abcKey: 'Cb', label: 'Dó Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'Gb', label: 'Sol Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'Db', label: 'Ré Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'Ab', label: 'Lá Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'Eb', label: 'Mi Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'Bb', label: 'Si Bemol Maior', tipo: 'bemois' },
-            { abcKey: 'F', label: 'Fá Maior', tipo: 'bemois' },
-            { abcKey: 'C', label: 'Dó Maior', tipo: 'ambos' },
-            { abcKey: 'G', label: 'Sol Maior', tipo: 'sustenidos' },
-            { abcKey: 'D', label: 'Ré Maior', tipo: 'sustenidos' },
-            { abcKey: 'A', label: 'Lá Maior', tipo: 'sustenidos' },
-            { abcKey: 'E', label: 'Mi Maior', tipo: 'sustenidos' },
-            { abcKey: 'B', label: 'Si Maior', tipo: 'sustenidos' },
-            { abcKey: 'F#', label: 'Fá Sustenido Maior', tipo: 'sustenidos' },
-            { abcKey: 'C#', label: 'Dó Sustenido Maior', tipo: 'sustenidos' }
+            { escala: 'Dó Maior', resposta: 'Sem alterações', tipo: 'todos', imagem: 'Armaduras - Sustenido/DoMaior.png' },
+            
+            // Sustenidos (Ordem: Fá, Dó, Sol, Ré, Lá, Mi, Si)
+            { escala: 'Sol Maior', resposta: 'Fá#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/SolMaior.png' },
+            { escala: 'Ré Maior', resposta: 'Fá#, Dó#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/ReMaior.png' },
+            { escala: 'Lá Maior', resposta: 'Fá#, Dó#, Sol#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/LaMaior.png' },
+            { escala: 'Mi Maior', resposta: 'Fá#, Dó#, Sol#, Ré#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/MiMaior.png' },
+            { escala: 'Si Maior', resposta: 'Fá#, Dó#, Sol#, Ré#, Lá#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/SiMaior.png' },
+            { escala: 'Fá# Maior', resposta: 'Fá#, Dó#, Sol#, Ré#, Lá#, Mi#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/FaSusMaior.png' },
+            { escala: 'Dó# Maior', resposta: 'Fá#, Dó#, Sol#, Ré#, Lá#, Mi#, Si#', tipo: 'sustenidos', imagem: 'Armaduras - Sustenido/DoSusMaior.png' },
+            
+            // Bemóis (Ordem: Si, Mi, Lá, Ré, Sol, Dó, Fá)
+            { escala: 'Fá Maior', resposta: 'Sib', tipo: 'bemois', imagem: 'Armaduras - Bemóis/FaMaior.png' },
+            { escala: 'Si Bemol Maior', resposta: 'Sib, Mib', tipo: 'bemois', imagem: 'Armaduras - Bemóis/SibMaior.png' },
+            { escala: 'Mi Bemol Maior', resposta: 'Sib, Mib, Láb', tipo: 'bemois', imagem: 'Armaduras - Bemóis/MibMaior.png' },
+            { escala: 'Lá Bemol Maior', resposta: 'Sib, Mib, Láb, Réb', tipo: 'bemois', imagem: 'Armaduras - Bemóis/LabMaior.png' },
+            { escala: 'Ré Bemol Maior', resposta: 'Sib, Mib, Láb, Réb, Solb', tipo: 'bemois', imagem: 'Armaduras - Bemóis/RebMaior.png' },
+            { escala: 'Sol Bemol Maior', resposta: 'Sib, Mib, Láb, Réb, Solb, Dób', tipo: 'bemois', imagem: 'Armaduras - Bemóis/SolbMaior.png' },
+            { escala: 'Dó Bemol Maior', resposta: 'Sib, Mib, Láb, Réb, Solb, Dób, Fáb', tipo: 'bemois', imagem: 'Armaduras - Bemóis/DobMaior.png' }
         ];
 
         let questaoAtual = null;
@@ -283,7 +215,7 @@
         let acertos = 0;
         let total = 0;
         let timeoutId = null;
-        const PLACAR_STORAGE_KEY = 'armaduras_placar_v1';
+        const PLACAR_STORAGE_KEY = 'fazerarmaduras_placar_v1';
 
         function salvarPlacarLocal() {
             localStorage.setItem(PLACAR_STORAGE_KEY, JSON.stringify({ acertos, total }));
@@ -322,15 +254,16 @@
         }
 
         function carregarQuestao() {
+            // Reseta a barra de tempo
             const timerBar = document.getElementById('timerBar');
             timerBar.style.display = 'none';
             timerBar.style.width = '0%';
 
             const filtro = document.getElementById('filtroModulo').value;
             
-            // Lógica de filtragem garantindo a inclusão da tonalidade Dó Maior
+            // Filtra permitindo que 'Dó Maior' (tipo 'todos') apareça sempre
             let conjuntoFiltro = baseDados.filter(item => 
-                filtro === 'ambos' || item.tipo === filtro || item.label === 'Dó Maior'
+                filtro === 'ambos' || item.tipo === filtro || item.tipo === 'todos'
             );
 
             let novaQuestao;
@@ -341,25 +274,21 @@
             questaoAtual = novaQuestao;
             questaoAnterior = questaoAtual;
             
-            // Renderização da armadura de clave no elemento DOM
-            const abcString = `
-X:1
-T:
-M:none
-L:1/1
-K:${questaoAtual.abcKey} clef=treble
-|]`;
-            
-            ABCJS.renderAbc("partitura", abcString, { 
-                add_classes: true, 
-                scale: 2.0, 
-                staffwidth: 150, 
-                foregroundColor: "#000000" 
-            });
+            // Exibe o nome da escala
+            document.getElementById('textoQuestao').innerText = questaoAtual.escala;
 
-            // Seleção de alternativas incorretas
-            let outrasOpcoes = baseDados.filter(item => item.label !== questaoAtual.label);
-            outrasOpcoes = embaralhar(outrasOpcoes).slice(0, 5);
+            // Pega 3 respostas erradas aleatórias sem misturar bemóis/sustenidos
+            let conjuntoDistratores;
+            if (questaoAtual.tipo === 'todos') {
+                conjuntoDistratores = conjuntoFiltro.filter(item => item.escala !== questaoAtual.escala);
+            } else {
+                conjuntoDistratores = conjuntoFiltro.filter(item =>
+                    item.escala !== questaoAtual.escala && (item.tipo === questaoAtual.tipo || item.tipo === 'todos')
+                );
+            }
+
+            let outrasOpcoes = conjuntoDistratores;
+            outrasOpcoes = embaralhar(outrasOpcoes).slice(0, 3);
 
             let todasOpcoes = [...outrasOpcoes, questaoAtual];
             todasOpcoes = embaralhar(todasOpcoes);
@@ -370,8 +299,14 @@ K:${questaoAtual.abcKey} clef=treble
             todasOpcoes.forEach(opcao => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.innerText = opcao.label;
-                btn.onclick = () => verificarResposta(btn, opcao.label === questaoAtual.label);
+                btn.dataset.escala = opcao.escala;
+
+                const imagem = document.createElement('img');
+                imagem.src = opcao.imagem;
+                imagem.alt = `Armadura de ${opcao.escala}`;
+
+                btn.appendChild(imagem);
+                btn.onclick = () => verificarResposta(btn, opcao.escala === questaoAtual.escala);
                 containerOpcoes.appendChild(btn);
             });
         }
@@ -379,9 +314,10 @@ K:${questaoAtual.abcKey} clef=treble
         function verificarResposta(botaoClicado, isCorrect) {
             const botoes = document.querySelectorAll('.option-btn');
             
+            // Trava os botões e pinta as respostas
             botoes.forEach(btn => {
                 btn.disabled = true;
-                if (btn.innerText === questaoAtual.label) {
+                if (btn.dataset.escala === questaoAtual.escala) {
                     btn.classList.add('correct');
                 }
             });
@@ -396,12 +332,13 @@ K:${questaoAtual.abcKey} clef=treble
 
             atualizarPlacarDOM();
 
-            // Progressão automática
+            // Animação visual opcional para mostrar que vai avançar
             const timerBar = document.getElementById('timerBar');
             timerBar.style.display = 'block';
             setTimeout(() => { timerBar.style.width = '100%'; }, 50);
 
-            timeoutId = setTimeout(carregarQuestao, 1500);
+            // Avança automaticamente após 1.5 segundos
+            timeoutId = setTimeout(carregarQuestao, 500);
         }
 
         window.onload = () => {

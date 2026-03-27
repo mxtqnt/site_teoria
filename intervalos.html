@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinamento: Intervalos Musicais</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/abcjs/6.2.2/abcjs-basic-min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg-color: #f4f4f9; --text-color: #333333; --accent-color: #ff00ff;
+            --card-bg: #ffffff; --border-color: #eaeaea; --hover-color: #fdf0fd;
+            --correct: #28a745; --incorrect: #dc3545; --control-bg: #f8f9fa;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --text-color: #e0e0e0; --card-bg: #1e1e1e;
+            --border-color: #2c2c2c; --hover-color: #3a1c3a; --control-bg: #2a2a2a;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); color: var(--text-color); 
+            margin: 0; padding: 20px; display: flex; flex-direction: column; 
+            align-items: center; min-height: 100vh; transition: 0.3s;
+        }
+        
+        .header-controls {
+            display: flex; justify-content: space-between; align-items: center; 
+            width: 100%; max-width: 800px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+        }
+
+        .header-controls .back-btn, 
+        .header-controls .score-board, 
+        .header-controls #themeToggle {
+            height: 40px; padding: 0 15px; border-radius: 20px; /* Bordas mais redondas */
+            border: 1px solid var(--border-color); background-color: var(--card-bg); 
+            color: var(--text-color); font-size: 0.95rem; display: flex;
+            align-items: center; justify-content: center; text-decoration: none; 
+            margin: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .header-controls .score-board span { color: var(--accent-color); margin: 0 4px; font-weight: 600; }
+        .header-controls #themeToggle { font-size: 1.2rem; cursor: pointer; border: none; background: transparent; box-shadow: none; }
+        .header-controls #themeToggle:hover { color: var(--accent-color); }
+
+        .quiz-container {
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 30px; text-align: center; max-width: 600px; width: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-top: 10px;
+        }
+
+        .quiz-container h2 {
+            font-size: 1.3rem; margin-top: 0; margin-bottom: 20px; font-weight: 600;
+        }
+
+        .partitura-container {
+            background-color: #ffffff; color: #000000 !important; 
+            border-radius: 12px; border: 1px solid var(--border-color); 
+            padding: 10px; margin-bottom: 30px; min-height: 150px; 
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .partitura-container svg {
+            color: #000000 !important; fill: #000000 !important; max-width: 100%; height: auto;
+        }
+
+        /* --- UI MODERNA PARA OS SELETORES --- */
+        .selectors-wrapper {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .selector-box {
+            display: flex; background: var(--control-bg); border-radius: 50px; /* Estilo pílula */
+            padding: 4px; align-items: center; justify-content: space-between;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Profundidade sutil */
+        }
+
+        .selector-box span {
+            font-size: 1.1rem; font-weight: 600; color: var(--text-color); 
+            user-select: none; text-align: center;
+        }
+        
+        /* Larguras fixas para o texto não empurrar os botões */
+        #numeroDisplay { width: 40px; }
+        #qualidadeDisplay { width: 100px; }
+        #direcaoDisplay, #tipoDisplay { width: 120px; }
+
+        .adjust-btn {
+            background: transparent; border: none; color: #888;
+            font-size: 1.2rem; border-radius: 50%; cursor: pointer; display: flex; 
+            align-items: center; justify-content: center; transition: 0.2s ease;
+            width: 38px; height: 38px; font-weight: bold;
+        }
+        
+        .adjust-btn:hover:not(:disabled) { 
+            background: var(--card-bg); color: var(--accent-color); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .adjust-btn:active:not(:disabled) { transform: scale(0.9); }
+
+        .confirm-btn {
+            background-color: var(--accent-color); color: white; border: none;
+            padding: 14px 24px; border-radius: 30px; transition: 0.3s ease; 
+            font-weight: 600; font-size: 1.1rem; width: 100%; max-width: 300px; 
+            cursor: pointer; letter-spacing: 0.5px;
+        }
+        .confirm-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255, 0, 255, 0.3); }
+        .confirm-btn:active:not(:disabled) { transform: translateY(0); }
+        
+        .confirm-btn.correct { background-color: var(--correct) !important; box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important; }
+        .confirm-btn.wrong { background-color: var(--incorrect) !important; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3) !important; }
+
+        .timer-bar {
+            height: 4px; background-color: var(--accent-color); width: 0%; 
+            transition: width 1.5s linear; margin-top: 25px; border-radius: 2px; display: none;
+            opacity: 0.5;
+        }
+        
+        footer {
+            margin-top: auto; padding: 30px 20px 10px; text-align: center;
+            font-size: 0.9rem; color: var(--text-color); opacity: 0.6; width: 100%;
+        }
+        footer a { color: var(--accent-color); text-decoration: none; font-weight: bold; transition: opacity 0.3s; }
+        footer a:hover { opacity: 1; text-decoration: underline; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="header-controls">
+        <a href="index.html" class="back-btn">← Voltar</a>
+        <div class="score-board">
+            Acertos: <span id="pontosAcertos">0</span> / <span id="pontosTotal">0</span>
+        </div>
+        <button id="themeToggle" title="Alternar Tema">☾</button>
+    </div>
+
+    <div class="quiz-container">
+        <h2>Identifique o Intervalo Musical</h2>
+        
+        <div class="partitura-container" id="partitura"></div>
+
+        <div class="selectors-wrapper">
+            <div class="selector-box">
+                <button class="adjust-btn controle" onclick="mudarNumero(-1)">-</button>
+                <span id="numeroDisplay">3</span>
+                <button class="adjust-btn controle" onclick="mudarNumero(1)">+</button>
+            </div>
+
+            <div class="selector-box">
+                <button class="adjust-btn controle" onclick="mudarQualidade(-1)">❮</button>
+                <span id="qualidadeDisplay">Maior</span>
+                <button class="adjust-btn controle" onclick="mudarQualidade(1)">❯</button>
+            </div>
+
+            <div class="selector-box">
+                <button class="adjust-btn controle" onclick="mudarDirecao(-1)">❮</button>
+                <span id="direcaoDisplay">Ascendente</span>
+                <button class="adjust-btn controle" onclick="mudarDirecao(1)">❯</button>
+            </div>
+
+            <div class="selector-box">
+                <button class="adjust-btn controle" onclick="mudarTipo(-1)">❮</button>
+                <span id="tipoDisplay">Melódico</span>
+                <button class="adjust-btn controle" onclick="mudarTipo(1)">❯</button>
+            </div>
+        </div>
+
+        <button id="btnConfirmar" class="confirm-btn controle" onclick="verificarResposta()">Confirmar Resposta</button>
+        <div id="timerBar" class="timer-bar"></div>
+    </div>
+
+    <footer>
+        Desenvolvido por Ana Misque | Siga no Instagram: <a href="https://instagram.com/anamisque" target="_blank" rel="noopener noreferrer">@anamisque</a>
+    </footer>
+    
+    <script>
+        const themeBtn = document.getElementById('themeToggle');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerText = '☀'; 
+        }
+        themeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const newTheme = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            themeBtn.innerText = newTheme === 'dark' ? '☀' : '☾'; 
+        });
+
+        const baseDados = [
+            { abc: '[C_D]', resposta: '2ªm' }, { abc: '[CD]', resposta: '2ªM' },
+            { abc: '[C_E]', resposta: '3ªm' }, { abc: '[CE]', resposta: '3ªM' },
+            { abc: '[CF]', resposta: '4ªJ' }, { abc: '[C^F]', resposta: '4ªA' },
+            { abc: '[CG]', resposta: '5ªJ' }, { abc: '[C_A]', resposta: '6ªm' },
+            { abc: '[CA]', resposta: '6ªM' }, { abc: '[C_B]', resposta: '7ªm' },
+            { abc: '[CB]', resposta: '7ªM' }, { abc: '[Cc]', resposta: '8ªJ' },
+            { abc: '[DF]', resposta: '3ªm' }, { abc: '[D^F]', resposta: '3ªM' },
+            { abc: '[DA]', resposta: '5ªJ' }, { abc: '[DB]', resposta: '6ªM' },
+            { abc: '[EF]', resposta: '2ªm' }, { abc: '[EG]', resposta: '3ªm' },
+            { abc: '[E^G]', resposta: '3ªM' }, { abc: '[EB]', resposta: '5ªJ' },
+            { abc: '[FA]', resposta: '3ªM' }, { abc: '[FB]', resposta: '4ªA' },
+            { abc: '[Fc]', resposta: '5ªJ' }, { abc: '[GB]', resposta: '3ªM' },
+            { abc: '[Gd]', resposta: '5ªJ' }, { abc: '[Ge]', resposta: '6ªM' }
+        ];
+
+        let questaoAtual = null;
+        let acertos = 0; let total = 0; let timeoutId = null;
+        const PLACAR_STORAGE_KEY = 'intervalos_placar_v1';
+
+        function salvarPlacarLocal() {
+            localStorage.setItem(PLACAR_STORAGE_KEY, JSON.stringify({ acertos, total }));
+        }
+
+        function carregarPlacarLocal() {
+            const placarSalvo = localStorage.getItem(PLACAR_STORAGE_KEY);
+            if (!placarSalvo) return;
+
+            try {
+                const dados = JSON.parse(placarSalvo);
+                acertos = Number.isFinite(dados.acertos) ? dados.acertos : 0;
+                total = Number.isFinite(dados.total) ? dados.total : 0;
+            } catch {
+                acertos = 0;
+                total = 0;
+            }
+        }
+
+        let numeroAtual = 3;
+        const qualidades = [
+            { nome: 'Diminuta', sigla: 'd' }, { nome: 'Menor', sigla: 'm' },
+            { nome: 'Maior', sigla: 'M' }, { nome: 'Justa', sigla: 'J' }, { nome: 'Aumentada', sigla: 'A' }
+        ];
+        let qualidadeIndex = 2; // Inicia em 'Maior'
+        const direcoes = ['Ascendente', 'Descendente'];
+        const tipos = ['Melódico', 'Harmônico'];
+        let direcaoIndex = 0;
+        let tipoIndex = 0;
+
+        function mudarNumero(delta) {
+            numeroAtual += delta;
+            if (numeroAtual < 2) numeroAtual = 8;
+            if (numeroAtual > 8) numeroAtual = 2;
+            document.getElementById('numeroDisplay').innerText = numeroAtual;
+        }
+
+        function mudarQualidade(delta) {
+            qualidadeIndex += delta;
+            if (qualidadeIndex < 0) qualidadeIndex = qualidades.length - 1;
+            if (qualidadeIndex >= qualidades.length) qualidadeIndex = 0;
+            document.getElementById('qualidadeDisplay').innerText = qualidades[qualidadeIndex].nome;
+        }
+
+        function mudarDirecao(delta) {
+            direcaoIndex += delta;
+            if (direcaoIndex < 0) direcaoIndex = direcoes.length - 1;
+            if (direcaoIndex >= direcoes.length) direcaoIndex = 0;
+            document.getElementById('direcaoDisplay').innerText = direcoes[direcaoIndex];
+        }
+
+        function mudarTipo(delta) {
+            tipoIndex += delta;
+            if (tipoIndex < 0) tipoIndex = tipos.length - 1;
+            if (tipoIndex >= tipos.length) tipoIndex = 0;
+            document.getElementById('tipoDisplay').innerText = tipos[tipoIndex];
+        }
+
+        function extrairNotas(abcIntervalo) {
+            const match = abcIntervalo.match(/^\[([^\]]+)\]$/);
+            if (!match) return null;
+            const notas = match[1].match(/(?:\^{1,2}|_{1,2}|=)?[A-Ga-g][,']*/g);
+            return notas && notas.length === 2 ? notas : null;
+        }
+
+        function atualizarPlacarDOM() {
+            document.getElementById('pontosAcertos').innerText = acertos;
+            document.getElementById('pontosTotal').innerText = total;
+            salvarPlacarLocal();
+        }
+
+        function travarControles(travar) {
+            const controles = document.querySelectorAll('.controle');
+            controles.forEach(btn => btn.disabled = travar);
+        }
+
+        function carregarQuestao() {
+            travarControles(false);
+            
+            const btnConfirmar = document.getElementById('btnConfirmar');
+            btnConfirmar.className = 'confirm-btn controle';
+            btnConfirmar.innerText = 'Confirmar Resposta';
+
+            const timerBar = document.getElementById('timerBar');
+            timerBar.style.display = 'none'; timerBar.style.width = '0%';
+
+            let novaQuestao;
+            do {
+                novaQuestao = baseDados[Math.floor(Math.random() * baseDados.length)];
+            } while (baseDados.length > 1 && novaQuestao === questaoAtual);
+
+            const notas = extrairNotas(novaQuestao.abc);
+            const direcaoCorreta = direcoes[Math.floor(Math.random() * direcoes.length)];
+            const tipoCorreto = tipos[Math.floor(Math.random() * tipos.length)];
+
+            questaoAtual = {
+                ...novaQuestao,
+                notas,
+                direcaoCorreta,
+                tipoCorreto
+            };
+
+            let escritaIntervalo = questaoAtual.abc;
+            if (notas) {
+                if (tipoCorreto === 'Melódico') {
+                    escritaIntervalo = direcaoCorreta === 'Ascendente'
+                        ? `${notas[0]} ${notas[1]}`
+                        : `${notas[1]} ${notas[0]}`;
+                } else {
+                    escritaIntervalo = direcaoCorreta === 'Ascendente'
+                        ? `[${notas[0]}${notas[1]}]`
+                        : `[${notas[1]}${notas[0]}]`;
+                }
+            }
+
+            const abcString = `
+X:1
+T:
+M:none
+L:1/1
+K:C clef=treble
+${escritaIntervalo} |]`;
+            
+            ABCJS.renderAbc("partitura", abcString, { 
+                add_classes: true, scale: 1.5, staffwidth: 200, foregroundColor: "#000000" 
+            });
+        }
+
+        function verificarResposta() {
+            travarControles(true);
+            
+            const respostaUsuario = `${numeroAtual}ª${qualidades[qualidadeIndex].sigla}`;
+            const direcaoUsuario = direcoes[direcaoIndex];
+            const tipoUsuario = tipos[tipoIndex];
+            const isCorrect = respostaUsuario === questaoAtual.resposta
+                && direcaoUsuario === questaoAtual.direcaoCorreta
+                && tipoUsuario === questaoAtual.tipoCorreto;
+            const btnConfirmar = document.getElementById('btnConfirmar');
+
+            total++;
+            if (isCorrect) {
+                acertos++;
+                btnConfirmar.classList.add('correct');
+                btnConfirmar.innerText = 'Correto!';
+            } else {
+                btnConfirmar.classList.add('wrong');
+                btnConfirmar.innerText = `Incorreto! Era ${questaoAtual.resposta} • ${questaoAtual.direcaoCorreta} • ${questaoAtual.tipoCorreto}`;
+            }
+
+            atualizarPlacarDOM();
+
+            const timerBar = document.getElementById('timerBar');
+            timerBar.style.display = 'block';
+            setTimeout(() => { timerBar.style.width = '100%'; }, 50);
+
+            timeoutId = setTimeout(carregarQuestao, 1500);
+        }
+
+        window.onload = () => {
+            carregarPlacarLocal();
+            atualizarPlacarDOM();
+            carregarQuestao();
+        };
+    </script>
+</body>
+</html>
