@@ -233,7 +233,7 @@
             { nome: 'Maior', sigla: 'M' }, { nome: 'Justa', sigla: 'J' }, { nome: 'Aumentada', sigla: 'A' }
         ];
         let qualidadeIndex = 2; // Inicia em 'Maior'
-        const direcoes = ['Ascendente', 'Descendente'];
+        const direcoes = ['Ascendente', 'Descendente', '-'];
         const tipos = ['Melódico', 'Harmônico'];
         let direcaoIndex = 0;
         let tipoIndex = 0;
@@ -300,8 +300,14 @@
             } while (baseDados.length > 1 && novaQuestao === questaoAtual);
 
             const notas = extrairNotas(novaQuestao.abc);
-            const direcaoCorreta = direcoes[Math.floor(Math.random() * direcoes.length)];
             const tipoCorreto = tipos[Math.floor(Math.random() * tipos.length)];
+
+            let direcaoCorreta;
+            if (tipoCorreto === 'Harmônico') {
+                direcaoCorreta = '-';
+            } else {
+                direcaoCorreta = Math.random() < 0.5 ? 'Ascendente' : 'Descendente';
+            }
 
             questaoAtual = {
                 ...novaQuestao,
